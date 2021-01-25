@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
     <title>Stock Data AJAX Call</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         /* body {
             background: url("Money.jpg");
@@ -15,7 +16,7 @@
     </style>
 </head>
 <body>
-    <div style="height: 5em; margin-bottom: 1em; background: url(Money.jpg); background-size: cover; background-repeat: no-repeat; align-self: stretch;"></div>
+    <div class="shadow-lg" style="height: 5em; margin-bottom: 1em; background: url(Money.jpg); background-size: cover; background-repeat: no-repeat; align-self: stretch;"></div>
     
     
     
@@ -36,44 +37,24 @@
     <!-- <p id="response"></p> -->
 
     <div div="container" style="width: 40em; margin: auto; margin-top:1em;">
-            <table class="table table-striped table-bordered table-hover">
+            <table id="stockTable" class="table table-striped table-bordered table-hover shadow">
                 <thead class="table-dark">
                     <tr>
-                        <th>Information</th>
-                        <th>Value</th>
+                        <th>Stock Symbol</th>
+                        <th>Open</th>
+                        <th>High</th>
+                        <th>Low</th>
+                        <th>Close</th>
+                        <th>Price change</th>
+                        <th>Date</th>
+                        <th></th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Stock Symbol</td>
-                        <td id="symbol">-</td>
-                    </tr>
-                    <tr>
-                        <td>Date</td>
-                        <td id="date">-</td>
-                    </tr>
-                    <tr>
-                        <td>Open Price</td>
-                        <td id="open">-</td>
-                    </tr>
-                    <tr>
-                        <td>Daily High Price</td>
-                        <td id="high">-</td>
-                    </tr>
-                    <tr>
-                        <td>Daily Low Price</td>
-                        <td id="low">-</td>
-                    </tr>
-                    <tr>
-                        <td>Close Price</td>
-                        <td id="close">-</td>
-                    </tr>
-                    <tr>
-                        <td>Price Change <img id="changeImage" src=""></td>
-                        <td id="change">-</td>
-                    </tr>
+                <tbody id="tableBody">
+        
                 </tbody>
             </table>
+            <button onclick="clearTable()" class="btn btn-danger">Clear All</button>
     </div>
 </body>
 <script>
@@ -95,51 +76,70 @@
                 let stock = JSON.parse(this.responseText);
                 console.log(stock);
 
-                // let reply = 
-                // "Name: " + character.name + 
-                // "<br>Height: " + character.height +
-                // "<br>Mass: " + character.mass;
 
-                // `Name: ${character.name} <br>
-                // Height: ${character.height} <br>
-                // Mass: ${character.mass}`;
-                // document.getElementById("response").innerHTML = reply;
+                let table = document.getElementById("tableBody"); // get reference to tbody
+                let row = table.insertRow(); // reference to row being inserted
 
+                // data cells
+                let symCell = row.insertCell();
+                let openCell = row.insertCell();
+                let highCell = row.insertCell();
+                let lowCell = row.insertCell();
+                let closeCell = row.insertCell();
+                let changeCell = row.insertCell();
+                let dateCell = row.insertCell();
+                let delCell = row.insertCell();
+
+                // Delete Column: added first incase no data returned
+                delCell.innerHTML = "<button onclick='delRow(this.parentElement.parentElement)' class='btn'><i class='fa fa-trash'></i></button>";
                 
+                // extract pertinent info from the retrieved JSON that will be used several times
+                // stock.MetaData.LastRefreshed
                 let date = stock["Meta Data"]["3. Last Refreshed"];
                 let open = stock["Time Series (Daily)"][date]["1. open"];
                 let close = stock["Time Series (Daily)"][date]["4. close"];
-                document.getElementById("symbol").innerHTML = stock["Meta Data"]["2. Symbol"];
-                console.log(stock["Meta Data"]["2. Symbol"]);
-                document.getElementById("date").innerHTML = date;
-                
-                document.getElementById("open").innerHTML = "$" + open;
-                document.getElementById("high").innerHTML = "$" + stock["Time Series (Daily)"][date]["2. high"];
-                document.getElementById("low").innerHTML = "$" + stock["Time Series (Daily)"][date]["3. low"];
-                document.getElementById("close").innerHTML = "$" + close;
-                document.getElementById("change").innerHTML = "$" + (parseFloat(close)-parseFloat(open)).toFixed(4);
-                // in the black if close is greater than open
+
+                // Symbol Column
+                symCell.appendChild(document.createTextNode(stock["Meta Data"]["2. Symbol"]));
+
+                // Open Column
+                openCell.appendChild(document.createTextNode("$" + open));
+
+                // High Column
+                highCell.appendChild(document.createTextNode("$" + stock["Time Series (Daily)"][date]["2. high"]));
+
+                // Low Column
+                lowCell.appendChild(document.createTextNode("$" + stock["Time Series (Daily)"][date]["3. low"]));
+
+                // Close Column
+                closeCell.appendChild(document.createTextNode("$" + close));
+
+                // Change Column
                 if(close > open) {
-                    
-                    document.getElementById("changeImage").src = "blackUp.png";
-                    document.getElementById("changeImage").style.width = ".8em";
+                    changeCell.appendChild(document.createTextNode("$" + (parseFloat(close)-parseFloat(open)).toFixed(4)));
                 } else {
-                    document.getElementById("changeImage").src = "redDown.jpg";
-                    document.getElementById("changeImage").style.width = "2em";
+                    changeCell.innerHTML = "<font color='red'>$" + (parseFloat(close)-parseFloat(open)).toFixed(4) + "</font>";
                 }
                 
+
+                // Date column
+                dateCell.appendChild(document.createTextNode(date));
+
+                // Delete Column
+                delCell.innerHTML = "<button onclick='delRow(this.parentElement.parentElement)' class='btn'><i class='fa fa-trash'></i></button>";
             }
         }
 
         let symbol = document.getElementById('search').value;
         console.log("Symbol: " + symbol);
         symbol = symbol.toUpperCase();
-        
+        document.getElementById('search').value = ''; // reset field
+
         if (symbol == "") {
             company = document.getElementById('company');
             symbol = company.options[company.selectedIndex].value;
         }
-        
+
         let url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=" + symbol +
                     "&apikey=PF406A4969ET26EB"
 
@@ -152,6 +152,17 @@
        
     
     }
+
+
+    function delRow(row) {
+        console.log(row.rowIndex);
+        document.getElementById("tableBody").deleteRow(row.rowIndex-1);
+    }
+
+    function clearTable() {
+        document.getElementById("tableBody").innerHTML = "";
+    }
+
 </script>
 
 </html>
